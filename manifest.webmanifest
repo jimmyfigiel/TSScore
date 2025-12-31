@@ -2,11 +2,11 @@
   "name": "Trick Shot Hockey Scoreboard",
   "short_name": "Hockey Score",
   "start_url": "./",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#0a0a0a",
   "theme_color": "#0a0a0a",
   "orientation": "landscape",
-  "description": "A landscape-first hockey scoreboard for trick-shot games.",
+  "description": "A fullscreen, landscape-first hockey scoreboard for trick-shot games.",
   "icons": [
     {
       "src": "icons/icon-192.png",

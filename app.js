@@ -1,16 +1,15 @@
-// Landscape-first Trick Shot Hockey Scoreboard
+// Fullscreen-first landscape Trick Shot Hockey Scoreboard
+// Gestures:
 // - Tap HOME/AWAY score to +1
 // - Tap TIME to -2:00
-// - Tap PERIOD to cycle: 1 -> 2 -> 3 -> OT -> 1 ... (resets clock to 20:00 per period)
-// - Global Undo/Redo (so Undo acts like "score down" if you made a mistake)
-// - Best-effort Wake Lock + best-effort Orientation Lock (where supported)
-// - Offline cache via service worker, state persisted in localStorage
+// - Tap PERIOD to cycle 1 -> 2 -> 3 -> OT -> 1 (clock resets to 20:00)
+// Controls are hidden behind a menu button to maximize screen space.
+// Global Undo/Redo makes "undo is score down" behavior.
 
 (() => {
   const $ = (sel) => document.querySelector(sel);
 
   const PERIODS = ["1", "2", "3", "OT"];
-
   const DEFAULT_STATE = Object.freeze({
     period: "1",
     clockSeconds: 20 * 60,
@@ -18,16 +17,23 @@
     awayScore: 0,
   });
 
-  const STORAGE_KEY = "trickshot_scoreboard_v2_landscape";
+  const STORAGE_KEY = "trickshot_scoreboard_v3_fullscreen";
 
   let state = clone(DEFAULT_STATE);
   let undoStack = [];
   let redoStack = [];
 
+  // Main controls
   const homeScoreBtn = $("#homeScoreBtn");
   const awayScoreBtn = $("#awayScoreBtn");
   const clockBtn = $("#clockBtn");
   const periodBtn = $("#periodBtn");
+
+  // HUD / controls panel
+  const menuBtn = $("#menuBtn");
+  const controls = $("#controls");
+  const backdrop = $("#controlsBackdrop");
+  const closeControlsBtn = $("#closeControlsBtn");
 
   const undoBtn = $("#undoBtn");
   const redoBtn = $("#redoBtn");
@@ -35,8 +41,7 @@
   const newGameBtn = $("#newGameBtn");
   const noteEl = $("#note");
 
-  const wakeDot = $("#wakeDot");
-  const wakeText = $("#wakeText");
+  const wakeMini = $("#wakeMini");
 
   function clone(obj) {
     if (typeof structuredClone === "function") return structuredClone(obj);
@@ -47,9 +52,7 @@
     return Math.max(min, Math.min(max, n));
   }
 
-  function format2(n) {
-    return String(n).padStart(2, "0");
-  }
+  function format2(n) { return String(n).padStart(2, "0"); }
 
   function formatClock(totalSeconds) {
     const s = clamp(totalSeconds, 0, 20 * 60);
@@ -65,7 +68,7 @@
   // ----- History (global) -----
   function pushUndo(prevState) {
     undoStack.push(clone(prevState));
-    if (undoStack.length > 80) undoStack.shift();
+    if (undoStack.length > 100) undoStack.shift();
     redoStack.length = 0;
   }
 
@@ -121,9 +124,8 @@
   function cyclePeriod() {
     applyUpdate((s) => {
       const idx = PERIODS.indexOf(s.period);
-      const next = PERIODS[(idx + 1) % PERIODS.length];
-      s.period = next;
-      s.clockSeconds = 20 * 60; // per your spec: each period starts at 20:00
+      s.period = PERIODS[(idx + 1) % PERIODS.length];
+      s.clockSeconds = 20 * 60;
     });
     buzz(8);
   }
@@ -136,6 +138,19 @@
       s.awayScore = 0;
     });
     buzz(14);
+  }
+
+  // ----- Controls panel -----
+  function openControls() {
+    controls.classList.remove("controls--hidden");
+    // next frame to allow transition
+    requestAnimationFrame(() => controls.classList.add("controls--open"));
+  }
+
+  function closeControls() {
+    controls.classList.remove("controls--open");
+    // after transition, hide
+    setTimeout(() => controls.classList.add("controls--hidden"), 180);
   }
 
   // ----- Render -----
@@ -180,45 +195,44 @@
   let wakeLock = null;
   const wakeSupported = "wakeLock" in navigator;
 
-  function setWakeUI(mode) {
+  function setWakeMini(mode) {
+    // mode: on/off/unsupported/error
     if (mode === "on") {
-      wakeDot.style.background = "rgba(0, 210, 122, 0.95)";
-      wakeDot.style.boxShadow = "0 0 0 4px rgba(0,210,122,0.15)";
-      wakeText.textContent = "Wake lock: ON";
-      noteEl.textContent = "Wake lock active (where supported).";
-      return;
-    }
-    if (mode === "off") {
-      wakeDot.style.background = "rgba(255,255,255,0.25)";
-      wakeDot.style.boxShadow = "0 0 0 4px rgba(255,255,255,0.07)";
-      wakeText.textContent = "Wake lock: off";
-      noteEl.textContent = "Tip: First tap enables wake lock (on supported browsers).";
+      wakeMini.style.background = "rgba(0, 210, 122, 0.95)";
+      wakeMini.style.boxShadow = "0 0 0 4px rgba(0,210,122,0.15)";
       return;
     }
     if (mode === "unsupported") {
-      wakeDot.style.background = "rgba(255, 209, 74, 0.9)";
-      wakeDot.style.boxShadow = "0 0 0 4px rgba(255,209,74,0.12)";
-      wakeText.textContent = "Wake lock: unsupported";
-      noteEl.textContent = "This browser can’t keep the screen awake via web APIs. If needed, temporarily set Auto-Lock to Never.";
+      wakeMini.style.background = "rgba(255, 209, 74, 0.9)";
+      wakeMini.style.boxShadow = "0 0 0 4px rgba(255,209,74,0.12)";
       return;
     }
-    wakeDot.style.background = "rgba(255,42,42,0.9)";
-    wakeDot.style.boxShadow = "0 0 0 4px rgba(255,42,42,0.12)";
-    wakeText.textContent = "Wake lock: error";
-    noteEl.textContent = "Wake lock request failed. Try tapping once more.";
+    if (mode === "error") {
+      wakeMini.style.background = "rgba(255,42,42,0.9)";
+      wakeMini.style.boxShadow = "0 0 0 4px rgba(255,42,42,0.12)";
+      return;
+    }
+    wakeMini.style.background = "rgba(255,255,255,0.25)";
+    wakeMini.style.boxShadow = "0 0 0 4px rgba(255,255,255,0.07)";
   }
 
   async function requestWakeLock() {
-    if (!wakeSupported) { setWakeUI("unsupported"); return; }
+    if (!wakeSupported) {
+      setWakeMini("unsupported");
+      noteEl.textContent = "Wake lock unsupported on this browser. If needed, temporarily set Auto-Lock to Never.";
+      return;
+    }
     try {
       wakeLock = await navigator.wakeLock.request("screen");
-      setWakeUI("on");
+      setWakeMini("on");
+      noteEl.textContent = "Wake lock active (where supported).";
       wakeLock.addEventListener("release", () => {
         wakeLock = null;
-        setWakeUI("off");
+        setWakeMini("off");
       });
     } catch {
-      setWakeUI("error");
+      setWakeMini("error");
+      noteEl.textContent = "Wake lock request failed. Try opening controls and tapping again.";
     }
   }
 
@@ -230,20 +244,27 @@
   async function lockLandscape() {
     try {
       const o = screen.orientation;
-      if (o && typeof o.lock === "function") {
-        await o.lock("landscape");
-      }
-    } catch {
-      // ignored (many browsers block / don't support)
-    }
+      if (o && typeof o.lock === "function") await o.lock("landscape");
+    } catch {}
   }
 
-  // Kick: first user gesture (needed for wake lock & often for orientation lock)
+  // ----- Fullscreen API (best effort) -----
+  async function requestFullscreen() {
+    // Works in many Android browsers; iOS Safari does not reliably support for PWAs.
+    try {
+      if (document.fullscreenElement) return;
+      const el = document.documentElement;
+      if (el.requestFullscreen) await el.requestFullscreen();
+    } catch {}
+  }
+
+  // Kick: first user gesture (needed for wake lock, and often for orientation/fullscreen)
   let kickStarted = false;
   async function kickOnce() {
     if (kickStarted) return;
     kickStarted = true;
     await lockLandscape();
+    await requestFullscreen();
     await requestWakeLock();
   }
 
@@ -262,20 +283,29 @@
     clockBtn.addEventListener("click", stepClock);
     periodBtn.addEventListener("click", cyclePeriod);
 
+    menuBtn.addEventListener("click", () => {
+      openControls();
+      buzz(6);
+    });
+    closeControlsBtn.addEventListener("click", closeControls);
+    backdrop.addEventListener("click", closeControls);
+
     undoBtn.addEventListener("click", undo);
     redoBtn.addEventListener("click", redo);
     resetClockBtn.addEventListener("click", resetClock);
     newGameBtn.addEventListener("click", newGame);
 
-    // keyboard support for desktop testing
+    // keyboard for desktop testing
     document.addEventListener("keydown", (e) => {
       const key = e.key.toLowerCase();
+      if (key === "escape") closeControls();
       if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
       if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) { e.preventDefault(); redo(); }
       if (key === " ") { e.preventDefault(); stepClock(); }
       if (key === "p") { e.preventDefault(); cyclePeriod(); }
       if (key === "h") { e.preventDefault(); addScore("home"); }
       if (key === "a") { e.preventDefault(); addScore("away"); }
+      if (key === "m") { e.preventDefault(); openControls(); }
     });
   }
 
@@ -283,7 +313,7 @@
     const ok = restore();
     render();
     wireEvents();
-    if (!wakeSupported) setWakeUI("unsupported"); else setWakeUI("off");
+    setWakeMini(wakeSupported ? "off" : "unsupported");
     registerServiceWorker();
     if (!ok) persist();
   }

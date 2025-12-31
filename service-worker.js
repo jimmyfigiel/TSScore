@@ -1,4 +1,4 @@
-const CACHE_NAME = "trickshot-scoreboard-v2-landscape";
+const CACHE_NAME = "trickshot-scoreboard-v3-fullscreen";
 const ASSETS = [
   "./",
   "./index.html",

@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0a0a" />
   <meta name="description" content="Trick Shot Hockey Scoreboard" />
 
-  <!-- iOS PWA-ish support -->
+  <!-- iOS standalone support -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
@@ -25,27 +25,36 @@
     </div>
   </div>
 
+  <!-- Minimal HUD (floats over the board) -->
+  <div class="hud">
+    <button class="hud__btn" id="menuBtn" aria-label="Open controls">☰</button>
+    <div class="hud__wake" id="wakeMini" aria-label="Wake lock status"></div>
+  </div>
+
+  <!-- Slide-up controls (Undo/Redo/Reset/New) -->
+  <div class="controls controls--hidden" id="controls" role="dialog" aria-label="Controls">
+    <div class="controls__panel">
+      <div class="controls__header">
+        <div class="controls__title">Controls</div>
+        <button class="controls__close" id="closeControlsBtn" aria-label="Close controls">✕</button>
+      </div>
+      <div class="controls__grid">
+        <button class="btn" id="undoBtn" aria-label="Undo">Undo</button>
+        <button class="btn" id="redoBtn" aria-label="Redo">Redo</button>
+        <button class="btn" id="resetClockBtn" aria-label="Reset period clock to twenty minutes">Reset Clock</button>
+        <button class="btn" id="newGameBtn" aria-label="Start a new game">New Game</button>
+      </div>
+      <div class="controls__note" id="note">Tip: Install (Add to Home Screen) for true fullscreen.</div>
+    </div>
+    <div class="controls__backdrop" id="controlsBackdrop" aria-hidden="true"></div>
+  </div>
+
   <div class="app" id="app">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand__title">TRICK SHOT HOCKEY</div>
-        <div class="brand__subtitle">SCOREBOARD</div>
-      </div>
-
-      <div class="status">
-        <div class="pill" id="wakePill" aria-live="polite">
-          <span class="dot" id="wakeDot"></span>
-          <span id="wakeText">Wake lock: …</span>
-        </div>
-      </div>
-    </header>
-
     <main class="board" role="application" aria-label="Scoreboard">
       <section class="scoreboard" aria-label="Main scoreboard">
         <div class="team team--home">
           <div class="team__label">HOME</div>
           <button class="digits digits--score" id="homeScoreBtn" aria-label="Home score. Tap to add 1.">00</button>
-          <div class="team__hint">Tap score to add <strong>+1</strong></div>
         </div>
 
         <div class="center">
@@ -56,26 +65,11 @@
 
           <div class="label label--time">TIME</div>
           <button class="digits digits--clock" id="clockBtn" aria-label="Main clock. Tap to subtract two minutes.">20:00</button>
-          <div class="center__hint">Tap time to subtract <strong>2:00</strong></div>
         </div>
 
         <div class="team team--away">
           <div class="team__label">AWAY</div>
           <button class="digits digits--score" id="awayScoreBtn" aria-label="Away score. Tap to add 1.">00</button>
-          <div class="team__hint">Tap score to add <strong>+1</strong></div>
-        </div>
-      </section>
-
-      <section class="actions" aria-label="Actions">
-        <button class="btn" id="undoBtn" aria-label="Undo">Undo</button>
-        <button class="btn" id="redoBtn" aria-label="Redo">Redo</button>
-        <button class="btn" id="resetClockBtn" aria-label="Reset period clock to twenty minutes">Reset Clock</button>
-        <button class="btn" id="newGameBtn" aria-label="Start a new game">New Game</button>
-      </section>
-
-      <section class="footer">
-        <div class="footer__note" id="note">
-          Tip: Install (Add to Home Screen) for the best experience.
         </div>
       </section>
     </main>
