@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0736c7" />
+  <meta name="theme-color" content="#b00000" />
   <meta name="description" content="Trick Shot Hockey Scoreboard" />
 
   <!-- iOS standalone support -->
@@ -17,13 +17,11 @@
   <title>Trick Shot Hockey</title>
 </head>
 <body>
-  <!-- Minimal HUD -->
   <div class="hud">
     <button class="hud__btn" id="menuBtn" aria-label="Open controls">☰</button>
     <div class="hud__wake" id="wakeMini" aria-label="Wake lock status"></div>
   </div>
 
-  <!-- Slide-up controls -->
   <div class="controls controls--hidden" id="controls" role="dialog" aria-label="Controls" aria-modal="true">
     <div class="controls__panel">
       <div class="controls__header">
@@ -51,12 +49,12 @@
         <section class="panel" id="scoreboard" aria-label="Main scoreboard">
           <div class="col col--home" id="homeBox">
             <div class="label label--side">HOME</div>
-            <button class="digits digits--score dot" id="homeScoreBtn"
+            <button class="digits digits--score" id="homeScoreBtn"
               aria-label="Home score. Tap to add 1. Double tap to undo last action.">00</button>
           </div>
 
           <div class="col col--center" id="centerBox">
-            <button class="digits digits--clock dot" id="clockBtn" aria-label="Main clock. Tap to subtract two minutes.">20:00</button>
+            <button class="digits digits--clock" id="clockBtn" aria-label="Main clock. Tap to subtract two minutes.">20:00</button>
 
             <div class="periodRow" aria-label="Period row">
               <div class="label label--period">PERIOD</div>
@@ -66,7 +64,7 @@
 
           <div class="col col--away" id="awayBox">
             <div class="label label--side">GUEST</div>
-            <button class="digits digits--score dot" id="awayScoreBtn"
+            <button class="digits digits--score" id="awayScoreBtn"
               aria-label="Guest score. Tap to add 1. Double tap to undo last action.">00</button>
           </div>
         </section>
