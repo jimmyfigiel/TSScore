@@ -1,11 +1,3 @@
-// Fullscreen-first landscape Trick Shot Hockey Scoreboard
-// Gestures:
-// - Tap HOME/AWAY score to +1
-// - Tap TIME to -2:00
-// - Tap PERIOD to cycle 1 -> 2 -> 3 -> OT -> 1 (clock resets to 20:00)
-// Controls are hidden behind a menu button to maximize screen space.
-// Global Undo/Redo makes "undo is score down" behavior.
-
 (() => {
   const $ = (sel) => document.querySelector(sel);
 
@@ -17,19 +9,17 @@
     awayScore: 0,
   });
 
-  const STORAGE_KEY = "trickshot_scoreboard_v3_fullscreen";
+  const STORAGE_KEY = "trickshot_scoreboard_v4_fit_dbltap";
 
   let state = clone(DEFAULT_STATE);
   let undoStack = [];
   let redoStack = [];
 
-  // Main controls
   const homeScoreBtn = $("#homeScoreBtn");
   const awayScoreBtn = $("#awayScoreBtn");
   const clockBtn = $("#clockBtn");
   const periodBtn = $("#periodBtn");
 
-  // HUD / controls panel
   const menuBtn = $("#menuBtn");
   const controls = $("#controls");
   const backdrop = $("#controlsBackdrop");
@@ -48,10 +38,7 @@
     return JSON.parse(JSON.stringify(obj));
   }
 
-  function clamp(n, min, max) {
-    return Math.max(min, Math.min(max, n));
-  }
-
+  function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
   function format2(n) { return String(n).padStart(2, "0"); }
 
   function formatClock(totalSeconds) {
@@ -68,7 +55,7 @@
   // ----- History (global) -----
   function pushUndo(prevState) {
     undoStack.push(clone(prevState));
-    if (undoStack.length > 100) undoStack.shift();
+    if (undoStack.length > 120) undoStack.shift();
     redoStack.length = 0;
   }
 
@@ -143,25 +130,12 @@
   // ----- Controls panel -----
   function openControls() {
     controls.classList.remove("controls--hidden");
-    // next frame to allow transition
     requestAnimationFrame(() => controls.classList.add("controls--open"));
   }
 
   function closeControls() {
     controls.classList.remove("controls--open");
-    // after transition, hide
     setTimeout(() => controls.classList.add("controls--hidden"), 180);
-  }
-
-  // ----- Render -----
-  function render() {
-    homeScoreBtn.textContent = format2(state.homeScore);
-    awayScoreBtn.textContent = format2(state.awayScore);
-    clockBtn.textContent = formatClock(state.clockSeconds);
-    periodBtn.textContent = state.period;
-
-    undoBtn.disabled = undoStack.length === 0;
-    redoBtn.disabled = redoStack.length === 0;
   }
 
   // ----- Persistence -----
@@ -191,12 +165,71 @@
     } catch { return false; }
   }
 
+  // ----- Auto-fit digits -----
+  function fitText(el, maxPx, minPx = 18) {
+    const w = el.clientWidth;
+    const h = el.clientHeight;
+    if (w <= 0 || h <= 0) return;
+
+    let lo = minPx;
+    let hi = Math.max(minPx, maxPx);
+    let best = lo;
+
+    for (let i = 0; i < 12; i++) {
+      const mid = (lo + hi) / 2;
+      el.style.fontSize = mid + "px";
+      const fits = (el.scrollWidth <= w) && (el.scrollHeight <= h);
+      if (fits) { best = mid; lo = mid; } else { hi = mid; }
+    }
+    el.style.fontSize = Math.floor(best) + "px";
+  }
+
+  function fitAllDigits() {
+    requestAnimationFrame(() => {
+      const scoreMax = Math.min(homeScoreBtn.clientWidth * 0.92, homeScoreBtn.clientHeight * 0.92);
+      fitText(homeScoreBtn, scoreMax, 24);
+      fitText(awayScoreBtn, scoreMax, 24);
+
+      const clockMax = Math.min(clockBtn.clientWidth * 0.92, clockBtn.clientHeight * 0.94);
+      fitText(clockBtn, clockMax, 28);
+    });
+  }
+
+  // ----- Render -----
+  function render() {
+    homeScoreBtn.textContent = format2(state.homeScore);
+    awayScoreBtn.textContent = format2(state.awayScore);
+    clockBtn.textContent = formatClock(state.clockSeconds);
+    periodBtn.textContent = state.period;
+
+    undoBtn.disabled = undoStack.length === 0;
+    redoBtn.disabled = redoStack.length === 0;
+
+    fitAllDigits();
+  }
+
+  // ----- Double tap handling (no accidental +1) -----
+  function makeTapHandler({ onSingleTap, onDoubleTap, thresholdMs = 260 }) {
+    let timer = null;
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+        onDoubleTap?.();
+        return;
+      }
+      timer = setTimeout(() => {
+        timer = null;
+        onSingleTap?.();
+      }, thresholdMs);
+    };
+  }
+
   // ----- Wake Lock (best effort) -----
   let wakeLock = null;
   const wakeSupported = "wakeLock" in navigator;
 
   function setWakeMini(mode) {
-    // mode: on/off/unsupported/error
     if (mode === "on") {
       wakeMini.style.background = "rgba(0, 210, 122, 0.95)";
       wakeMini.style.boxShadow = "0 0 0 4px rgba(0,210,122,0.15)";
@@ -232,7 +265,7 @@
       });
     } catch {
       setWakeMini("error");
-      noteEl.textContent = "Wake lock request failed. Try opening controls and tapping again.";
+      noteEl.textContent = "Wake lock request failed. Try again after tapping once.";
     }
   }
 
@@ -250,7 +283,6 @@
 
   // ----- Fullscreen API (best effort) -----
   async function requestFullscreen() {
-    // Works in many Android browsers; iOS Safari does not reliably support for PWAs.
     try {
       if (document.fullscreenElement) return;
       const el = document.documentElement;
@@ -258,7 +290,7 @@
     } catch {}
   }
 
-  // Kick: first user gesture (needed for wake lock, and often for orientation/fullscreen)
+  // Kick: first user gesture (needed for wake lock + sometimes orientation/fullscreen)
   let kickStarted = false;
   async function kickOnce() {
     if (kickStarted) return;
@@ -278,15 +310,15 @@
   function wireEvents() {
     document.addEventListener("pointerdown", kickOnce, { passive: true, capture: true });
 
-    homeScoreBtn.addEventListener("click", () => addScore("home"));
-    awayScoreBtn.addEventListener("click", () => addScore("away"));
+    const homeTap = makeTapHandler({ onSingleTap: () => addScore("home"), onDoubleTap: undo });
+    const awayTap = makeTapHandler({ onSingleTap: () => addScore("away"), onDoubleTap: undo });
+    homeScoreBtn.addEventListener("click", homeTap);
+    awayScoreBtn.addEventListener("click", awayTap);
+
     clockBtn.addEventListener("click", stepClock);
     periodBtn.addEventListener("click", cyclePeriod);
 
-    menuBtn.addEventListener("click", () => {
-      openControls();
-      buzz(6);
-    });
+    menuBtn.addEventListener("click", () => { openControls(); buzz(6); });
     closeControlsBtn.addEventListener("click", closeControls);
     backdrop.addEventListener("click", closeControls);
 
@@ -295,18 +327,8 @@
     resetClockBtn.addEventListener("click", resetClock);
     newGameBtn.addEventListener("click", newGame);
 
-    // keyboard for desktop testing
-    document.addEventListener("keydown", (e) => {
-      const key = e.key.toLowerCase();
-      if (key === "escape") closeControls();
-      if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
-      if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) { e.preventDefault(); redo(); }
-      if (key === " ") { e.preventDefault(); stepClock(); }
-      if (key === "p") { e.preventDefault(); cyclePeriod(); }
-      if (key === "h") { e.preventDefault(); addScore("home"); }
-      if (key === "a") { e.preventDefault(); addScore("away"); }
-      if (key === "m") { e.preventDefault(); openControls(); }
-    });
+    window.addEventListener("resize", fitAllDigits, { passive: true });
+    screen?.orientation?.addEventListener?.("change", fitAllDigits);
   }
 
   function init() {
@@ -316,6 +338,9 @@
     setWakeMini(wakeSupported ? "off" : "unsupported");
     registerServiceWorker();
     if (!ok) persist();
+
+    setTimeout(fitAllDigits, 60);
+    setTimeout(fitAllDigits, 250);
   }
 
   init();

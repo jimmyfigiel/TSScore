@@ -1,5 +1,6 @@
 /* Fullscreen-first landscape hockey scoreboard PWA
-   Goal: maximize digits; controls live in a slide-up panel.
+   - Digits auto-fit via JS (more reliable than vw/vh across devices)
+   - Controls live in a slide-up panel
 */
 
 :root{
@@ -10,7 +11,6 @@
   --dim: rgba(255,255,255,0.55);
   --red: #ff2a2a;
   --yellow: #ffd14a;
-  --green: #00d27a;
 
   --radius: 18px;
   --radius2: 26px;
@@ -26,13 +26,19 @@ html, body {
   background: radial-gradient(1200px 800px at 50% 0%, #1a1a1a 0%, var(--bg) 60%);
   color: var(--text);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 body { -webkit-tap-highlight-color: transparent; }
 
-/* Use dynamic viewport units when available to avoid iOS browser UI resizing jumps */
-.app { height: 100dvh; }
+.app {
+  height: 100vh;
+  height: 100svh;
+  height: 100dvh;
+  display: grid;
+  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+}
 
-/* Portrait overlay */
 .rotate{
   position: fixed;
   inset: 0;
@@ -65,7 +71,6 @@ body { -webkit-tap-highlight-color: transparent; }
   .rotate{ display: flex; }
 }
 
-/* Floating HUD */
 .hud{
   position: fixed;
   top: max(10px, env(safe-area-inset-top));
@@ -101,17 +106,10 @@ body { -webkit-tap-highlight-color: transparent; }
   box-shadow: 0 0 0 4px rgba(255,255,255,0.07);
 }
 
-/* Main board fills the screen */
-.app{
-  min-height: 100%;
-  padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
-  display: grid;
-}
-
 .board{
   height: 100%;
   width: 100%;
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
   display: grid;
 }
@@ -123,10 +121,10 @@ body { -webkit-tap-highlight-color: transparent; }
   border: 1px solid var(--border);
   border-radius: var(--radius2);
   box-shadow: var(--shadow);
-  padding: clamp(8px, 1.8vw, 14px);
+  padding: clamp(6px, 1.3vw, 14px);
   display: grid;
   grid-template-columns: 1fr 1.25fr 1fr;
-  gap: clamp(8px, 1.6vw, 14px);
+  gap: clamp(6px, 1.2vw, 14px);
   align-items: stretch;
 }
 
@@ -134,8 +132,9 @@ body { -webkit-tap-highlight-color: transparent; }
   display: grid;
   align-content: center;
   justify-items: center;
-  gap: clamp(8px, 1.2vw, 12px);
-  padding: clamp(6px, 1vw, 10px);
+  gap: clamp(6px, 1.0vw, 12px);
+  padding: clamp(4px, 0.8vw, 10px);
+  min-width: 0;
 }
 
 .team__label{
@@ -175,6 +174,7 @@ body { -webkit-tap-highlight-color: transparent; }
   box-shadow: 0 10px 26px rgba(0,0,0,0.35);
   user-select: none;
   touch-action: manipulation;
+  white-space: nowrap;
 }
 .period__display:active{ transform: translateY(1px); }
 
@@ -195,24 +195,23 @@ body { -webkit-tap-highlight-color: transparent; }
   width: 100%;
   text-align: center;
   line-height: 1.0;
+  white-space: nowrap;
 }
 
 .digits--score{
-  max-width: 420px;
-  padding: clamp(10px, 1.8vw, 22px);
-  /* scale by both width and height; choose the smaller */
-  font-size: min(14vw, 30vh);
+  max-width: 520px;
+  padding: clamp(8px, 1.3vw, 22px);
+  font-size: var(--score-font, min(14vw, 30vh));
 }
 
 .digits--clock{
-  padding: clamp(10px, 1.8vw, 24px);
-  font-size: min(16vw, 34vh);
+  padding: clamp(8px, 1.3vw, 24px);
+  font-size: var(--clock-font, min(16vw, 34vh));
   border-radius: 22px;
 }
 
 .label--time{ margin-top: 2px; }
 
-/* Slide-up controls panel */
 .controls{
   position: fixed;
   inset: 0;
@@ -231,7 +230,6 @@ body { -webkit-tap-highlight-color: transparent; }
 }
 .controls__panel{
   position: relative;
-  margin: 0;
   border-top-left-radius: var(--radius2);
   border-top-right-radius: var(--radius2);
   border: 1px solid var(--border);
@@ -300,7 +298,6 @@ body { -webkit-tap-highlight-color: transparent; }
 .btn:active{ transform: translateY(1px); }
 .btn[disabled]{ opacity: 0.45; cursor: not-allowed; transform: none; }
 
-/* open state */
 .controls--open{
   pointer-events: auto;
 }
@@ -309,14 +306,6 @@ body { -webkit-tap-highlight-color: transparent; }
 
 .controls--hidden{ display:none; }
 
-/* Responsive: stack controls if narrow */
 @media (max-width: 860px){
   .controls__grid{ grid-template-columns: 1fr 1fr; }
-}
-
-/* In standalone/fullscreen display-mode, ensure no extra padding tricks */
-@media (display-mode: standalone), (display-mode: fullscreen){
-  .controls__note::after{
-    content: "";
-  }
 }

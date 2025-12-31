@@ -25,14 +25,12 @@
     </div>
   </div>
 
-  <!-- Minimal HUD (floats over the board) -->
   <div class="hud">
     <button class="hud__btn" id="menuBtn" aria-label="Open controls">☰</button>
     <div class="hud__wake" id="wakeMini" aria-label="Wake lock status"></div>
   </div>
 
-  <!-- Slide-up controls (Undo/Redo/Reset/New) -->
-  <div class="controls controls--hidden" id="controls" role="dialog" aria-label="Controls">
+  <div class="controls controls--hidden" id="controls" role="dialog" aria-label="Controls" aria-modal="true">
     <div class="controls__panel">
       <div class="controls__header">
         <div class="controls__title">Controls</div>
@@ -51,10 +49,10 @@
 
   <div class="app" id="app">
     <main class="board" role="application" aria-label="Scoreboard">
-      <section class="scoreboard" aria-label="Main scoreboard">
+      <section class="scoreboard" id="scoreboard" aria-label="Main scoreboard">
         <div class="team team--home">
           <div class="team__label">HOME</div>
-          <button class="digits digits--score" id="homeScoreBtn" aria-label="Home score. Tap to add 1.">00</button>
+          <button class="digits digits--score" id="homeScoreBtn" aria-label="Home score. Tap to add 1. Double tap to undo last action.">00</button>
         </div>
 
         <div class="center">
@@ -69,7 +67,7 @@
 
         <div class="team team--away">
           <div class="team__label">AWAY</div>
-          <button class="digits digits--score" id="awayScoreBtn" aria-label="Away score. Tap to add 1.">00</button>
+          <button class="digits digits--score" id="awayScoreBtn" aria-label="Away score. Tap to add 1. Double tap to undo last action.">00</button>
         </div>
       </section>
     </main>
