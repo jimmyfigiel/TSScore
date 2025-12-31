@@ -9,7 +9,7 @@
     awayScore: 0,
   });
 
-  const STORAGE_KEY = "trickshot_scoreboard_v4_fit_dbltap";
+  const STORAGE_KEY = "trickshot_scoreboard_v5_responsive";
 
   let state = clone(DEFAULT_STATE);
   let undoStack = [];
@@ -55,7 +55,7 @@
   // ----- History (global) -----
   function pushUndo(prevState) {
     undoStack.push(clone(prevState));
-    if (undoStack.length > 120) undoStack.shift();
+    if (undoStack.length > 150) undoStack.shift();
     redoStack.length = 0;
   }
 
@@ -165,7 +165,7 @@
     } catch { return false; }
   }
 
-  // ----- Auto-fit digits -----
+  // ----- Auto-fit digits (prevents overlap) -----
   function fitText(el, maxPx, minPx = 18) {
     const w = el.clientWidth;
     const h = el.clientHeight;
@@ -175,7 +175,7 @@
     let hi = Math.max(minPx, maxPx);
     let best = lo;
 
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 13; i++) {
       const mid = (lo + hi) / 2;
       el.style.fontSize = mid + "px";
       const fits = (el.scrollWidth <= w) && (el.scrollHeight <= h);
@@ -186,12 +186,12 @@
 
   function fitAllDigits() {
     requestAnimationFrame(() => {
-      const scoreMax = Math.min(homeScoreBtn.clientWidth * 0.92, homeScoreBtn.clientHeight * 0.92);
-      fitText(homeScoreBtn, scoreMax, 24);
-      fitText(awayScoreBtn, scoreMax, 24);
+      const scoreMax = Math.min(homeScoreBtn.clientWidth * 0.92, homeScoreBtn.clientHeight * 0.88);
+      fitText(homeScoreBtn, scoreMax, 28);
+      fitText(awayScoreBtn, scoreMax, 28);
 
-      const clockMax = Math.min(clockBtn.clientWidth * 0.92, clockBtn.clientHeight * 0.94);
-      fitText(clockBtn, clockMax, 28);
+      const clockMax = Math.min(clockBtn.clientWidth * 0.92, clockBtn.clientHeight * 0.90);
+      fitText(clockBtn, clockMax, 32);
     });
   }
 
@@ -265,21 +265,13 @@
       });
     } catch {
       setWakeMini("error");
-      noteEl.textContent = "Wake lock request failed. Try again after tapping once.";
+      noteEl.textContent = "Wake lock request failed. Try again after a tap.";
     }
   }
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible" && !wakeLock) requestWakeLock();
   });
-
-  // ----- Orientation lock (best effort) -----
-  async function lockLandscape() {
-    try {
-      const o = screen.orientation;
-      if (o && typeof o.lock === "function") await o.lock("landscape");
-    } catch {}
-  }
 
   // ----- Fullscreen API (best effort) -----
   async function requestFullscreen() {
@@ -290,12 +282,11 @@
     } catch {}
   }
 
-  // Kick: first user gesture (needed for wake lock + sometimes orientation/fullscreen)
+  // Kick: first user gesture (needed for wake lock + sometimes fullscreen)
   let kickStarted = false;
   async function kickOnce() {
     if (kickStarted) return;
     kickStarted = true;
-    await lockLandscape();
     await requestFullscreen();
     await requestWakeLock();
   }
@@ -328,7 +319,7 @@
     newGameBtn.addEventListener("click", newGame);
 
     window.addEventListener("resize", fitAllDigits, { passive: true });
-    screen?.orientation?.addEventListener?.("change", fitAllDigits);
+    screen?.orientation?.addEventListener?.("change", () => setTimeout(fitAllDigits, 80));
   }
 
   function init() {
@@ -339,8 +330,8 @@
     registerServiceWorker();
     if (!ok) persist();
 
-    setTimeout(fitAllDigits, 60);
-    setTimeout(fitAllDigits, 250);
+    setTimeout(fitAllDigits, 80);
+    setTimeout(fitAllDigits, 260);
   }
 
   init();

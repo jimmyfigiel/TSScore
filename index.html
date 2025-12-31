@@ -18,13 +18,6 @@
   <title>Trick Shot Hockey Scoreboard</title>
 </head>
 <body>
-  <div class="rotate" id="rotateOverlay" aria-hidden="true">
-    <div class="rotate__card">
-      <div class="rotate__title">Rotate your phone</div>
-      <div class="rotate__sub">This scoreboard is designed for landscape.</div>
-    </div>
-  </div>
-
   <div class="hud">
     <button class="hud__btn" id="menuBtn" aria-label="Open controls">☰</button>
     <div class="hud__wake" id="wakeMini" aria-label="Wake lock status"></div>
@@ -42,7 +35,7 @@
         <button class="btn" id="resetClockBtn" aria-label="Reset period clock to twenty minutes">Reset Clock</button>
         <button class="btn" id="newGameBtn" aria-label="Start a new game">New Game</button>
       </div>
-      <div class="controls__note" id="note">Tip: Install (Add to Home Screen) for true fullscreen.</div>
+      <div class="controls__note" id="note">Tip: Install (Add to Home Screen) for the cleanest fullscreen.</div>
     </div>
     <div class="controls__backdrop" id="controlsBackdrop" aria-hidden="true"></div>
   </div>
@@ -50,24 +43,27 @@
   <div class="app" id="app">
     <main class="board" role="application" aria-label="Scoreboard">
       <section class="scoreboard" id="scoreboard" aria-label="Main scoreboard">
-        <div class="team team--home">
+        <div class="team team--home" id="homeBox">
           <div class="team__label">HOME</div>
-          <button class="digits digits--score" id="homeScoreBtn" aria-label="Home score. Tap to add 1. Double tap to undo last action.">00</button>
+          <button class="digits digits--score" id="homeScoreBtn"
+            aria-label="Home score. Tap to add 1. Double tap to undo last action.">00</button>
         </div>
 
-        <div class="center">
-          <div class="center__top">
+        <div class="center" id="centerBox">
+          <div class="center__meta">
             <div class="label">PERIOD</div>
             <button class="period__display" id="periodBtn" aria-label="Period. Tap to cycle.">1</button>
           </div>
 
-          <div class="label label--time">TIME</div>
           <button class="digits digits--clock" id="clockBtn" aria-label="Main clock. Tap to subtract two minutes.">20:00</button>
+
+          <div class="center__hint">Tap clock: <strong>-2:00</strong></div>
         </div>
 
-        <div class="team team--away">
+        <div class="team team--away" id="awayBox">
           <div class="team__label">AWAY</div>
-          <button class="digits digits--score" id="awayScoreBtn" aria-label="Away score. Tap to add 1. Double tap to undo last action.">00</button>
+          <button class="digits digits--score" id="awayScoreBtn"
+            aria-label="Away score. Tap to add 1. Double tap to undo last action.">00</button>
         </div>
       </section>
     </main>
