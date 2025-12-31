@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="description" content="Trick Shot Hockey Scoreboard" />
+
+  <!-- iOS PWA-ish support -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <link rel="stylesheet" href="styles.css" />
+  <title>Trick Shot Hockey Scoreboard</title>
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand__title">TRICK SHOT</div>
+        <div class="brand__subtitle">HOCKEY SCOREBOARD</div>
+      </div>
+
+      <div class="status">
+        <div class="pill" id="wakePill" aria-live="polite">
+          <span class="dot" id="wakeDot"></span>
+          <span id="wakeText">Wake lock: …</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="board" role="application" aria-label="Scoreboard">
+      <section class="period">
+        <div class="label">PERIOD</div>
+        <div class="period__buttons" role="group" aria-label="Period selector">
+          <button class="btn btn--period" data-period="1">1</button>
+          <button class="btn btn--period" data-period="2">2</button>
+          <button class="btn btn--period" data-period="3">3</button>
+          <button class="btn btn--period" data-period="OT">OT</button>
+        </div>
+      </section>
+
+      <section class="scores" aria-label="Scores">
+        <div class="team">
+          <div class="team__label">HOME</div>
+          <div class="digits" id="homeScore" aria-label="Home score">00</div>
+          <div class="team__controls">
+            <button class="btn btn--score" data-team="home" data-delta="-1" aria-label="Home score minus">–</button>
+            <button class="btn btn--score" data-team="home" data-delta="1" aria-label="Home score plus">+</button>
+          </div>
+        </div>
+
+        <div class="clock">
+          <div class="label">TIME</div>
+          <button class="digits digits--clock" id="clockBtn" aria-label="Main clock. Tap to subtract two minutes.">20:00</button>
+          <div class="clock__hint">Tap the clock to subtract <strong>2:00</strong></div>
+        </div>
+
+        <div class="team">
+          <div class="team__label">AWAY</div>
+          <div class="digits" id="awayScore" aria-label="Away score">00</div>
+          <div class="team__controls">
+            <button class="btn btn--score" data-team="away" data-delta="-1" aria-label="Away score minus">–</button>
+            <button class="btn btn--score" data-team="away" data-delta="1" aria-label="Away score plus">+</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="actions" aria-label="Actions">
+        <button class="btn btn--big" id="stepBtn" aria-label="Subtract two minutes">–2:00</button>
+        <button class="btn" id="resetClockBtn" aria-label="Reset period clock to twenty minutes">Reset Clock</button>
+        <button class="btn" id="newGameBtn" aria-label="Start a new game">New Game</button>
+      </section>
+
+      <section class="history" aria-label="Undo redo">
+        <button class="btn" id="undoBtn" aria-label="Undo">Undo</button>
+        <button class="btn" id="redoBtn" aria-label="Redo">Redo</button>
+      </section>
+
+      <section class="footer">
+        <div class="footer__note" id="note">
+          Tip: Install this PWA (Add to Home Screen) for the best scoreboard experience.
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

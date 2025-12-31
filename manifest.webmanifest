@@ -1,0 +1,21 @@
+{
+  "name": "Trick Shot Hockey Scoreboard",
+  "short_name": "Hockey Score",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "description": "A phone-friendly hockey scoreboard for trick-shot games.",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

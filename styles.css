@@ -1,0 +1,243 @@
+/* Trick Shot Hockey Scoreboard PWA
+   Phone-first, scoreboard vibe, big tap targets.
+*/
+
+:root{
+  --bg: #0a0a0a;
+  --border: rgba(255,255,255,0.10);
+  --text: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.72);
+  --dim: rgba(255,255,255,0.55);
+  --red: #ff2a2a;
+
+  --radius: 18px;
+  --radius2: 26px;
+
+  --shadow: 0 14px 34px rgba(0,0,0,0.55);
+  --font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+*{ box-sizing: border-box; }
+html, body { height: 100%; margin: 0; background: radial-gradient(1200px 800px at 50% 0%, #1a1a1a 0%, var(--bg) 60%); color: var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+body { -webkit-tap-highlight-color: transparent; }
+
+.app{
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+}
+
+.topbar{
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 8px 14px 8px;
+}
+
+.brand__title{
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  font-size: 14px;
+  color: var(--muted);
+}
+.brand__subtitle{
+  font-weight: 900;
+  letter-spacing: 0.10em;
+  font-size: 11px;
+  color: var(--dim);
+  margin-top: 2px;
+}
+
+.status{ display:flex; align-items:center; justify-content:flex-end; }
+
+.pill{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.35);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.2);
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.05);
+}
+
+.board{
+  display: grid;
+  grid-template-rows: auto 1fr auto auto auto;
+  gap: 14px;
+  max-width: 740px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.period,
+.scores,
+.actions,
+.history,
+.footer{
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  box-shadow: var(--shadow);
+  padding: 14px;
+}
+
+.label{
+  font-family: var(--font);
+  letter-spacing: 0.14em;
+  font-size: 12px;
+  color: var(--dim);
+  margin-bottom: 10px;
+}
+
+.period__buttons{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.scores{
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.team{
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.team__label{
+  font-family: var(--font);
+  letter-spacing: 0.18em;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.team__controls{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+.clock{
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+
+.clock__hint{
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.digits{
+  font-family: var(--font);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  border-radius: var(--radius);
+  border: 1px solid rgba(255,255,255,0.12);
+  background: linear-gradient(180deg, rgba(0,0,0,0.65), rgba(0,0,0,0.35));
+  color: var(--red);
+  text-shadow: 0 0 10px rgba(255,42,42,0.22);
+  padding: 16px 18px;
+  min-width: 120px;
+  text-align: center;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+  user-select: none;
+}
+
+.digits--clock{
+  width: 100%;
+  min-width: unset;
+  padding: 18px 16px;
+  font-size: clamp(44px, 8vw, 64px);
+  border-radius: 22px;
+  cursor: pointer;
+}
+
+@media (max-width: 480px){
+  .scores{ grid-template-columns: 1fr; }
+  .digits{ min-width: unset; width: 100%; }
+  .team__controls{ width: 100%; }
+}
+
+.btn{
+  appearance: none;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 14px 14px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  font-size: 16px;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.35);
+}
+
+.btn:active{ transform: translateY(1px); }
+
+.btn[disabled]{
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn--period{
+  font-family: var(--font);
+  font-size: 18px;
+  padding: 14px 10px;
+}
+
+.btn--period.is-active{
+  border-color: rgba(255,209,74,0.65);
+  box-shadow: 0 0 0 4px rgba(255,209,74,0.12), 0 10px 26px rgba(0,0,0,0.35);
+}
+
+.btn--score{
+  font-size: 22px;
+  padding: 14px 10px;
+}
+
+.btn--big{
+  font-family: var(--font);
+  font-size: 22px;
+  padding: 16px 14px;
+  background: linear-gradient(180deg, rgba(255,42,42,0.22), rgba(255,42,42,0.08));
+  border-color: rgba(255,42,42,0.35);
+}
+
+.actions{
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 10px;
+}
+
+.history{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.footer__note{
+  color: var(--dim);
+  font-size: 12px;
+  line-height: 1.35;
+}
