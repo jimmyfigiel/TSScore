@@ -18,11 +18,18 @@
   <title>Trick Shot Hockey Scoreboard</title>
 </head>
 <body>
+  <div class="rotate" id="rotateOverlay" aria-hidden="true">
+    <div class="rotate__card">
+      <div class="rotate__title">Rotate your phone</div>
+      <div class="rotate__sub">This scoreboard is designed for landscape.</div>
+    </div>
+  </div>
+
   <div class="app" id="app">
     <header class="topbar">
       <div class="brand">
-        <div class="brand__title">TRICK SHOT</div>
-        <div class="brand__subtitle">HOCKEY SCOREBOARD</div>
+        <div class="brand__title">TRICK SHOT HOCKEY</div>
+        <div class="brand__subtitle">SCOREBOARD</div>
       </div>
 
       <div class="status">
@@ -34,56 +41,41 @@
     </header>
 
     <main class="board" role="application" aria-label="Scoreboard">
-      <section class="period">
-        <div class="label">PERIOD</div>
-        <div class="period__buttons" role="group" aria-label="Period selector">
-          <button class="btn btn--period" data-period="1">1</button>
-          <button class="btn btn--period" data-period="2">2</button>
-          <button class="btn btn--period" data-period="3">3</button>
-          <button class="btn btn--period" data-period="OT">OT</button>
-        </div>
-      </section>
-
-      <section class="scores" aria-label="Scores">
-        <div class="team">
+      <section class="scoreboard" aria-label="Main scoreboard">
+        <div class="team team--home">
           <div class="team__label">HOME</div>
-          <div class="digits" id="homeScore" aria-label="Home score">00</div>
-          <div class="team__controls">
-            <button class="btn btn--score" data-team="home" data-delta="-1" aria-label="Home score minus">–</button>
-            <button class="btn btn--score" data-team="home" data-delta="1" aria-label="Home score plus">+</button>
-          </div>
+          <button class="digits digits--score" id="homeScoreBtn" aria-label="Home score. Tap to add 1.">00</button>
+          <div class="team__hint">Tap score to add <strong>+1</strong></div>
         </div>
 
-        <div class="clock">
-          <div class="label">TIME</div>
+        <div class="center">
+          <div class="center__top">
+            <div class="label">PERIOD</div>
+            <button class="period__display" id="periodBtn" aria-label="Period. Tap to cycle.">1</button>
+          </div>
+
+          <div class="label label--time">TIME</div>
           <button class="digits digits--clock" id="clockBtn" aria-label="Main clock. Tap to subtract two minutes.">20:00</button>
-          <div class="clock__hint">Tap the clock to subtract <strong>2:00</strong></div>
+          <div class="center__hint">Tap time to subtract <strong>2:00</strong></div>
         </div>
 
-        <div class="team">
+        <div class="team team--away">
           <div class="team__label">AWAY</div>
-          <div class="digits" id="awayScore" aria-label="Away score">00</div>
-          <div class="team__controls">
-            <button class="btn btn--score" data-team="away" data-delta="-1" aria-label="Away score minus">–</button>
-            <button class="btn btn--score" data-team="away" data-delta="1" aria-label="Away score plus">+</button>
-          </div>
+          <button class="digits digits--score" id="awayScoreBtn" aria-label="Away score. Tap to add 1.">00</button>
+          <div class="team__hint">Tap score to add <strong>+1</strong></div>
         </div>
       </section>
 
       <section class="actions" aria-label="Actions">
-        <button class="btn btn--big" id="stepBtn" aria-label="Subtract two minutes">–2:00</button>
+        <button class="btn" id="undoBtn" aria-label="Undo">Undo</button>
+        <button class="btn" id="redoBtn" aria-label="Redo">Redo</button>
         <button class="btn" id="resetClockBtn" aria-label="Reset period clock to twenty minutes">Reset Clock</button>
         <button class="btn" id="newGameBtn" aria-label="Start a new game">New Game</button>
       </section>
 
-      <section class="history" aria-label="Undo redo">
-        <button class="btn" id="undoBtn" aria-label="Undo">Undo</button>
-        <button class="btn" id="redoBtn" aria-label="Redo">Redo</button>
-      </section>
-
       <section class="footer">
         <div class="footer__note" id="note">
-          Tip: Install this PWA (Add to Home Screen) for the best scoreboard experience.
+          Tip: Install (Add to Home Screen) for the best experience.
         </div>
       </section>
     </main>

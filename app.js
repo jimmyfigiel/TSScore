@@ -1,6 +1,15 @@
+// Landscape-first Trick Shot Hockey Scoreboard
+// - Tap HOME/AWAY score to +1
+// - Tap TIME to -2:00
+// - Tap PERIOD to cycle: 1 -> 2 -> 3 -> OT -> 1 ... (resets clock to 20:00 per period)
+// - Global Undo/Redo (so Undo acts like "score down" if you made a mistake)
+// - Best-effort Wake Lock + best-effort Orientation Lock (where supported)
+// - Offline cache via service worker, state persisted in localStorage
+
 (() => {
   const $ = (sel) => document.querySelector(sel);
-  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+  const PERIODS = ["1", "2", "3", "OT"];
 
   const DEFAULT_STATE = Object.freeze({
     period: "1",
@@ -9,27 +18,25 @@
     awayScore: 0,
   });
 
-  const STORAGE_KEY = "trickshot_scoreboard_v1";
+  const STORAGE_KEY = "trickshot_scoreboard_v2_landscape";
 
   let state = clone(DEFAULT_STATE);
   let undoStack = [];
   let redoStack = [];
 
-  const homeScoreEl = $("#homeScore");
-  const awayScoreEl = $("#awayScore");
+  const homeScoreBtn = $("#homeScoreBtn");
+  const awayScoreBtn = $("#awayScoreBtn");
   const clockBtn = $("#clockBtn");
-  const stepBtn = $("#stepBtn");
-  const resetClockBtn = $("#resetClockBtn");
-  const newGameBtn = $("#newGameBtn");
+  const periodBtn = $("#periodBtn");
+
   const undoBtn = $("#undoBtn");
   const redoBtn = $("#redoBtn");
+  const resetClockBtn = $("#resetClockBtn");
+  const newGameBtn = $("#newGameBtn");
   const noteEl = $("#note");
 
   const wakeDot = $("#wakeDot");
   const wakeText = $("#wakeText");
-
-  const periodButtons = $$(".btn--period");
-  const scoreButtons = $$(".btn--score");
 
   function clone(obj) {
     if (typeof structuredClone === "function") return structuredClone(obj);
@@ -55,9 +62,10 @@
     try { if (navigator.vibrate) navigator.vibrate(ms); } catch {}
   }
 
+  // ----- History (global) -----
   function pushUndo(prevState) {
     undoStack.push(clone(prevState));
-    if (undoStack.length > 60) undoStack.shift();
+    if (undoStack.length > 80) undoStack.shift();
     redoStack.length = 0;
   }
 
@@ -89,10 +97,11 @@
     buzz(12);
   }
 
-  function setPeriod(period) {
+  // ----- Actions -----
+  function addScore(team) {
     applyUpdate((s) => {
-      s.period = String(period);
-      s.clockSeconds = 20 * 60;
+      if (team === "home") s.homeScore = clamp(s.homeScore + 1, 0, 99);
+      if (team === "away") s.awayScore = clamp(s.awayScore + 1, 0, 99);
     });
     buzz(8);
   }
@@ -109,10 +118,12 @@
     buzz(8);
   }
 
-  function changeScore(team, delta) {
+  function cyclePeriod() {
     applyUpdate((s) => {
-      if (team === "home") s.homeScore = clamp(s.homeScore + delta, 0, 99);
-      if (team === "away") s.awayScore = clamp(s.awayScore + delta, 0, 99);
+      const idx = PERIODS.indexOf(s.period);
+      const next = PERIODS[(idx + 1) % PERIODS.length];
+      s.period = next;
+      s.clockSeconds = 20 * 60; // per your spec: each period starts at 20:00
     });
     buzz(8);
   }
@@ -127,20 +138,18 @@
     buzz(14);
   }
 
+  // ----- Render -----
   function render() {
-    homeScoreEl.textContent = format2(state.homeScore);
-    awayScoreEl.textContent = format2(state.awayScore);
+    homeScoreBtn.textContent = format2(state.homeScore);
+    awayScoreBtn.textContent = format2(state.awayScore);
     clockBtn.textContent = formatClock(state.clockSeconds);
-
-    periodButtons.forEach((b) => {
-      const p = b.getAttribute("data-period");
-      b.classList.toggle("is-active", p === state.period);
-    });
+    periodBtn.textContent = state.period;
 
     undoBtn.disabled = undoStack.length === 0;
     redoBtn.disabled = redoStack.length === 0;
   }
 
+  // ----- Persistence -----
   function persist() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ state, undoStack, redoStack }));
@@ -156,7 +165,7 @@
 
       const s = payload.state;
       state = {
-        period: ["1","2","3","OT"].includes(s.period) ? s.period : "1",
+        period: PERIODS.includes(s.period) ? s.period : "1",
         clockSeconds: clamp(Number(s.clockSeconds ?? 1200), 0, 1200),
         homeScore: clamp(Number(s.homeScore ?? 0), 0, 99),
         awayScore: clamp(Number(s.awayScore ?? 0), 0, 99),
@@ -167,7 +176,7 @@
     } catch { return false; }
   }
 
-  // Wake Lock (best effort)
+  // ----- Wake Lock (best effort) -----
   let wakeLock = null;
   const wakeSupported = "wakeLock" in navigator;
 
@@ -176,27 +185,27 @@
       wakeDot.style.background = "rgba(0, 210, 122, 0.95)";
       wakeDot.style.boxShadow = "0 0 0 4px rgba(0,210,122,0.15)";
       wakeText.textContent = "Wake lock: ON";
-      noteEl.textContent = "Screen wake lock is active (where supported).";
+      noteEl.textContent = "Wake lock active (where supported).";
       return;
     }
     if (mode === "off") {
       wakeDot.style.background = "rgba(255,255,255,0.25)";
       wakeDot.style.boxShadow = "0 0 0 4px rgba(255,255,255,0.07)";
       wakeText.textContent = "Wake lock: off";
-      noteEl.textContent = "Tip: Tap once after opening to re-enable wake lock if needed.";
+      noteEl.textContent = "Tip: First tap enables wake lock (on supported browsers).";
       return;
     }
     if (mode === "unsupported") {
       wakeDot.style.background = "rgba(255, 209, 74, 0.9)";
       wakeDot.style.boxShadow = "0 0 0 4px rgba(255,209,74,0.12)";
       wakeText.textContent = "Wake lock: unsupported";
-      noteEl.textContent = "This browser can’t keep the screen awake via web APIs. If your screen sleeps, temporarily set Auto-Lock to Never for the session.";
+      noteEl.textContent = "This browser can’t keep the screen awake via web APIs. If needed, temporarily set Auto-Lock to Never.";
       return;
     }
     wakeDot.style.background = "rgba(255,42,42,0.9)";
     wakeDot.style.boxShadow = "0 0 0 4px rgba(255,42,42,0.12)";
     wakeText.textContent = "Wake lock: error";
-    noteEl.textContent = "Wake lock request failed. Try interacting with the page again.";
+    noteEl.textContent = "Wake lock request failed. Try tapping once more.";
   }
 
   async function requestWakeLock() {
@@ -217,38 +226,56 @@
     if (document.visibilityState === "visible" && !wakeLock) requestWakeLock();
   });
 
-  let wakeKickStarted = false;
-  function kickWakeOnce() {
-    if (wakeKickStarted) return;
-    wakeKickStarted = true;
-    requestWakeLock();
+  // ----- Orientation lock (best effort) -----
+  async function lockLandscape() {
+    try {
+      const o = screen.orientation;
+      if (o && typeof o.lock === "function") {
+        await o.lock("landscape");
+      }
+    } catch {
+      // ignored (many browsers block / don't support)
+    }
   }
 
+  // Kick: first user gesture (needed for wake lock & often for orientation lock)
+  let kickStarted = false;
+  async function kickOnce() {
+    if (kickStarted) return;
+    kickStarted = true;
+    await lockLandscape();
+    await requestWakeLock();
+  }
+
+  // ----- Service Worker -----
   async function registerServiceWorker() {
     if (!("serviceWorker" in navigator)) return;
     try { await navigator.serviceWorker.register("./service-worker.js"); } catch {}
   }
 
+  // ----- Events -----
   function wireEvents() {
-    document.addEventListener("pointerdown", kickWakeOnce, { passive: true, capture: true });
+    document.addEventListener("pointerdown", kickOnce, { passive: true, capture: true });
 
-    periodButtons.forEach((b) => b.addEventListener("click", () => setPeriod(b.getAttribute("data-period"))));
-    scoreButtons.forEach((b) => b.addEventListener("click", () => {
-      changeScore(b.getAttribute("data-team"), Number(b.getAttribute("data-delta")));
-    }));
-
+    homeScoreBtn.addEventListener("click", () => addScore("home"));
+    awayScoreBtn.addEventListener("click", () => addScore("away"));
     clockBtn.addEventListener("click", stepClock);
-    stepBtn.addEventListener("click", stepClock);
-    resetClockBtn.addEventListener("click", resetClock);
-    newGameBtn.addEventListener("click", newGame);
+    periodBtn.addEventListener("click", cyclePeriod);
+
     undoBtn.addEventListener("click", undo);
     redoBtn.addEventListener("click", redo);
+    resetClockBtn.addEventListener("click", resetClock);
+    newGameBtn.addEventListener("click", newGame);
 
+    // keyboard support for desktop testing
     document.addEventListener("keydown", (e) => {
       const key = e.key.toLowerCase();
       if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
       if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) { e.preventDefault(); redo(); }
       if (key === " ") { e.preventDefault(); stepClock(); }
+      if (key === "p") { e.preventDefault(); cyclePeriod(); }
+      if (key === "h") { e.preventDefault(); addScore("home"); }
+      if (key === "a") { e.preventDefault(); addScore("away"); }
     });
   }
 
