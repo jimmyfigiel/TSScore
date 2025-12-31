@@ -9,7 +9,7 @@
     awayScore: 0,
   });
 
-  const STORAGE_KEY = "trickshot_scoreboard_v5_responsive";
+  const STORAGE_KEY = "trickshot_scoreboard_v6_rangers_style";
 
   let state = clone(DEFAULT_STATE);
   let undoStack = [];
@@ -55,7 +55,7 @@
   // ----- History (global) -----
   function pushUndo(prevState) {
     undoStack.push(clone(prevState));
-    if (undoStack.length > 150) undoStack.shift();
+    if (undoStack.length > 200) undoStack.shift();
     redoStack.length = 0;
   }
 
@@ -165,12 +165,22 @@
     } catch { return false; }
   }
 
+  // ----- Dot-matrix text rendering support -----
+  function setDotText(el, text) {
+    // The visible text is in ::after via attr(data-text)
+    el.setAttribute("data-text", text);
+    // For accessibility / selection / debugging, keep real text too
+    el.textContent = text;
+  }
+
   // ----- Auto-fit digits (prevents overlap) -----
-  function fitText(el, maxPx, minPx = 18) {
+  function fitDotText(el, maxPx, minPx = 18) {
     const w = el.clientWidth;
     const h = el.clientHeight;
     if (w <= 0 || h <= 0) return;
 
+    // We measure by temporarily applying font-size to the button AND to its ::after via CSS var
+    // We'll drive ::after font-size using a CSS variable so it matches.
     let lo = minPx;
     let hi = Math.max(minPx, maxPx);
     let best = lo;
@@ -178,28 +188,51 @@
     for (let i = 0; i < 13; i++) {
       const mid = (lo + hi) / 2;
       el.style.fontSize = mid + "px";
-      const fits = (el.scrollWidth <= w) && (el.scrollHeight <= h);
+      el.style.setProperty("--fit", mid + "px");
+
+      // Create a hidden measurer span to avoid pseudo-element measurement inconsistencies
+      let m = el._measurer;
+      if (!m) {
+        m = document.createElement("span");
+        m.style.position = "absolute";
+        m.style.left = "-9999px";
+        m.style.top = "-9999px";
+        m.style.visibility = "hidden";
+        m.style.whiteSpace = "nowrap";
+        m.style.fontFamily = getComputedStyle(el).fontFamily;
+        m.style.fontWeight = getComputedStyle(el).fontWeight;
+        m.style.letterSpacing = getComputedStyle(el).letterSpacing;
+        m.style.lineHeight = "1";
+        document.body.appendChild(m);
+        el._measurer = m;
+      }
+      m.style.fontSize = mid + "px";
+      m.textContent = el.getAttribute("data-text") || el.textContent || "";
+
+      const fits = (m.offsetWidth <= w * 0.92) && (m.offsetHeight <= h * 0.92);
       if (fits) { best = mid; lo = mid; } else { hi = mid; }
     }
+
     el.style.fontSize = Math.floor(best) + "px";
+    el.style.setProperty("--fit", Math.floor(best) + "px");
   }
 
   function fitAllDigits() {
     requestAnimationFrame(() => {
-      const scoreMax = Math.min(homeScoreBtn.clientWidth * 0.92, homeScoreBtn.clientHeight * 0.88);
-      fitText(homeScoreBtn, scoreMax, 28);
-      fitText(awayScoreBtn, scoreMax, 28);
+      const scoreMax = Math.min(homeScoreBtn.clientWidth * 0.78, homeScoreBtn.clientHeight * 0.80);
+      fitDotText(homeScoreBtn, scoreMax, 34);
+      fitDotText(awayScoreBtn, scoreMax, 34);
 
-      const clockMax = Math.min(clockBtn.clientWidth * 0.92, clockBtn.clientHeight * 0.90);
-      fitText(clockBtn, clockMax, 32);
+      const clockMax = Math.min(clockBtn.clientWidth * 0.82, clockBtn.clientHeight * 0.84);
+      fitDotText(clockBtn, clockMax, 40);
     });
   }
 
   // ----- Render -----
   function render() {
-    homeScoreBtn.textContent = format2(state.homeScore);
-    awayScoreBtn.textContent = format2(state.awayScore);
-    clockBtn.textContent = formatClock(state.clockSeconds);
+    setDotText(homeScoreBtn, format2(state.homeScore));
+    setDotText(awayScoreBtn, format2(state.awayScore));
+    setDotText(clockBtn, formatClock(state.clockSeconds));
     periodBtn.textContent = state.period;
 
     undoBtn.disabled = undoStack.length === 0;
@@ -236,23 +269,23 @@
       return;
     }
     if (mode === "unsupported") {
-      wakeMini.style.background = "rgba(255, 209, 74, 0.9)";
-      wakeMini.style.boxShadow = "0 0 0 4px rgba(255,209,74,0.12)";
+      wakeMini.style.background = "rgba(255, 209, 74, 0.95)";
+      wakeMini.style.boxShadow = "0 0 0 4px rgba(255,209,74,0.18)";
+      noteEl.textContent = "Wake lock unsupported on this browser. If needed, temporarily set Auto-Lock to Never.";
       return;
     }
     if (mode === "error") {
-      wakeMini.style.background = "rgba(255,42,42,0.9)";
-      wakeMini.style.boxShadow = "0 0 0 4px rgba(255,42,42,0.12)";
+      wakeMini.style.background = "rgba(255,42,42,0.95)";
+      wakeMini.style.boxShadow = "0 0 0 4px rgba(255,42,42,0.18)";
       return;
     }
-    wakeMini.style.background = "rgba(255,255,255,0.25)";
-    wakeMini.style.boxShadow = "0 0 0 4px rgba(255,255,255,0.07)";
+    wakeMini.style.background = "rgba(255,255,255,0.35)";
+    wakeMini.style.boxShadow = "0 0 0 4px rgba(0,0,0,0.12)";
   }
 
   async function requestWakeLock() {
     if (!wakeSupported) {
       setWakeMini("unsupported");
-      noteEl.textContent = "Wake lock unsupported on this browser. If needed, temporarily set Auto-Lock to Never.";
       return;
     }
     try {
@@ -319,7 +352,7 @@
     newGameBtn.addEventListener("click", newGame);
 
     window.addEventListener("resize", fitAllDigits, { passive: true });
-    screen?.orientation?.addEventListener?.("change", () => setTimeout(fitAllDigits, 80));
+    screen?.orientation?.addEventListener?.("change", () => setTimeout(fitAllDigits, 120));
   }
 
   function init() {
@@ -330,8 +363,8 @@
     registerServiceWorker();
     if (!ok) persist();
 
-    setTimeout(fitAllDigits, 80);
-    setTimeout(fitAllDigits, 260);
+    setTimeout(fitAllDigits, 100);
+    setTimeout(fitAllDigits, 280);
   }
 
   init();

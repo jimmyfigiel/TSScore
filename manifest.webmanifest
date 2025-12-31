@@ -3,8 +3,8 @@
   "short_name": "Hockey Score",
   "start_url": "./",
   "display": "fullscreen",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "background_color": "#0736c7",
+  "theme_color": "#0736c7",
   "orientation": "any",
   "description": "A responsive hockey scoreboard for trick-shot games (portrait + landscape).",
   "icons": [

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="theme-color" content="#0736c7" />
   <meta name="description" content="Trick Shot Hockey Scoreboard" />
 
   <!-- iOS standalone support -->
@@ -13,16 +13,17 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-
   <link rel="stylesheet" href="styles.css" />
-  <title>Trick Shot Hockey Scoreboard</title>
+  <title>Trick Shot Hockey</title>
 </head>
 <body>
+  <!-- Minimal HUD -->
   <div class="hud">
     <button class="hud__btn" id="menuBtn" aria-label="Open controls">☰</button>
     <div class="hud__wake" id="wakeMini" aria-label="Wake lock status"></div>
   </div>
 
+  <!-- Slide-up controls -->
   <div class="controls controls--hidden" id="controls" role="dialog" aria-label="Controls" aria-modal="true">
     <div class="controls__panel">
       <div class="controls__header">
@@ -42,30 +43,34 @@
 
   <div class="app" id="app">
     <main class="board" role="application" aria-label="Scoreboard">
-      <section class="scoreboard" id="scoreboard" aria-label="Main scoreboard">
-        <div class="team team--home" id="homeBox">
-          <div class="team__label">HOME</div>
-          <button class="digits digits--score" id="homeScoreBtn"
-            aria-label="Home score. Tap to add 1. Double tap to undo last action.">00</button>
-        </div>
+      <div class="frame">
+        <header class="topbar" aria-label="Scoreboard title">
+          <div class="topbar__title">TRICK SHOT HOCKEY</div>
+        </header>
 
-        <div class="center" id="centerBox">
-          <div class="center__meta">
-            <div class="label">PERIOD</div>
-            <button class="period__display" id="periodBtn" aria-label="Period. Tap to cycle.">1</button>
+        <section class="panel" id="scoreboard" aria-label="Main scoreboard">
+          <div class="col col--home" id="homeBox">
+            <div class="label label--side">HOME</div>
+            <button class="digits digits--score dot" id="homeScoreBtn"
+              aria-label="Home score. Tap to add 1. Double tap to undo last action.">00</button>
           </div>
 
-          <button class="digits digits--clock" id="clockBtn" aria-label="Main clock. Tap to subtract two minutes.">20:00</button>
+          <div class="col col--center" id="centerBox">
+            <button class="digits digits--clock dot" id="clockBtn" aria-label="Main clock. Tap to subtract two minutes.">20:00</button>
 
-          <div class="center__hint">Tap clock: <strong>-2:00</strong></div>
-        </div>
+            <div class="periodRow" aria-label="Period row">
+              <div class="label label--period">PERIOD</div>
+              <button class="periodBox" id="periodBtn" aria-label="Period. Tap to cycle.">1</button>
+            </div>
+          </div>
 
-        <div class="team team--away" id="awayBox">
-          <div class="team__label">AWAY</div>
-          <button class="digits digits--score" id="awayScoreBtn"
-            aria-label="Away score. Tap to add 1. Double tap to undo last action.">00</button>
-        </div>
-      </section>
+          <div class="col col--away" id="awayBox">
+            <div class="label label--side">GUEST</div>
+            <button class="digits digits--score dot" id="awayScoreBtn"
+              aria-label="Guest score. Tap to add 1. Double tap to undo last action.">00</button>
+          </div>
+        </section>
+      </div>
     </main>
   </div>
 
